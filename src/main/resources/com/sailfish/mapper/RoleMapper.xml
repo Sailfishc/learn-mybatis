@@ -5,5 +5,244 @@
 <!--mapper：根元素，namespace：命名空间-->
 <mapper namespace="com.sailfish.mapper.RoleMapper">
 
+    <resultMap id="roleMap" type="com.sailfish.model.SysRole">
+        <id property="id" column="id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
 
+
+    <!--动态SQL-->
+    <!--这样是不满足某种业务场景的，例如只按照userName模糊查询或者是只单独按照userEmail精确查询-->
+    <select id="selectByCondition" resultType="com.sailfish.model.SysRole">
+        SELECT
+        *
+        FROM
+        SYS_ROLE
+        WHERE
+        role_name LIKE concat ('%', #{roleName}, '%')
+        and enabled = #{enabled}
+    </select>
+
+    <select id="selectByCondition2" resultType="com.sailfish.model.SysRole">
+        SELECT
+        *
+        FROM
+        SYS_ROLE
+        WHERE
+        1 = 1
+        <if test="roleName != null and roleName != ''">
+            role_name LIKE concat ('%', #{roleName}, '%')
+        </if>
+        <if test="enabled != null">
+            and enabled = #{enabled}
+        </if>
+    </select>
+
+    <!--有两个问题：1、更新条件全部为空时  2、更新条件有一个时会出现SQL异常-->
+    <update id="updateByCondition">
+        UPDATE SYS_ROLE
+        SET
+        <if test="roleName != null and roleName != ''">
+            role_name = #{roleName},
+        </if>
+        <if test="enabled != null">
+            enabled = #{enabled},
+        </if>
+        <if test="createBy != null">
+            create_by = #{createBy},
+        </if>
+        <if test="createTime != null">
+            create_time = #{createTime, jdbcType = TIMESTAMP},
+        </if>
+        where
+        id = #{id}
+    </update>
+
+    <update id="updateByCondition2">
+        UPDATE SYS_ROLE
+        SET
+        <if test="roleName != null and roleName != ''">
+            role_name = #{roleName},
+        </if>
+        <if test="enabled != null">
+            enabled = #{enabled},
+        </if>
+        <if test="createBy != null">
+            create_by = #{createBy},
+        </if>
+        <if test="createTime != null">
+            create_time = #{createTime, jdbcType = TIMESTAMP},
+        </if>
+        id = #{id}
+        where
+        id = #{id}
+    </update>
+
+    <!--set的用法：注意最后一个字段id后面加了,但是不会出错-->
+    <update id="updateByCondition3">
+        UPDATE SYS_ROLE
+        <set>
+            <if test="roleName != null and roleName != ''">
+                role_name = #{roleName},
+            </if>
+            <if test="enabled != null">
+                enabled = #{enabled},
+            </if>
+            <if test="createBy != null">
+                create_by = #{createBy},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime, jdbcType = TIMESTAMP},
+            </if>
+            id = #{id},
+        </set>
+        where
+        id = #{id}
+    </update>
+
+    <!--choose用法-->
+    <!--至少有一个when-->
+    <!--otherwise:这里给定一个排除条件，如果前面的都不成立，会查询出所有的，这里的条件就是让返回结果返回null-->
+    <select id="selectUseChoose" resultType="com.sailfish.model.SysRole">
+        SELECT *
+        FROM
+        sys_role
+        WHERE
+        1 = 1
+        <choose>
+            <when test="id != null">
+                and id = #{id}
+            </when>
+            <when test="roleName != null">
+                and role_name = #{roleName}
+            </when>
+            <otherwise>
+                and 1 = 2
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--where子句中可以不用管是否谁是第一个条件执行，而非得用and或者是where 1=1这种条件了-->
+    <select id="selectByWhere" resultType="com.sailfish.model.SysRole">
+        SELECT *
+        FROM
+        sys_role
+        <where>
+            <if test="roleName != null and roleName != ''">
+                AND role_name LIKE concat ('%', #{roleName}, '%')
+            </if>
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+    </select>
+
+
+    <!--foreach查询-->
+    <!--分别针对Array，JavaBean，Collection（List，Set），Map类型进行查询-->
+
+    <!--根据list查询：list中collection默认是list-->
+    <!--item字段指的是变量名，index指的是索引值，名字可以随便，但是在不同的数据类型中取的是不同的值，例如List取的是0，1，2等，在Map中取的是key，得到的value就是item，
+      也就是例如item = List.get(index);-->
+    <select id="selectByList" resultType="com.sailfish.model.SysRole">
+        SELECT * FROM sys_role
+        <where>
+            id IN
+            <foreach collection="list" open="(" close=")" separator=","
+                     item="hahah" index="hah">
+                #{hahah}
+            </foreach>
+        </where>
+    </select>
+
+    <select id="selectByList2" resultType="com.sailfish.model.SysRole">
+        SELECT * FROM sys_role
+        <where>
+            id IN
+            <foreach collection="ids" open="(" close=")" separator=","
+                     item="id" index="i">
+                #{id}
+            </foreach>
+        </where>
+    </select>
+
+    <!--使用set，set中collection默认是collection-->
+    <select id="selectBySet" resultType="com.sailfish.model.SysRole">
+        SELECT * FROM sys_role
+        <where>
+            id IN
+            <foreach collection="collection" open="(" close=")" separator=","
+                     item="id" index="i">
+                #{id}
+            </foreach>
+        </where>
+    </select>
+
+    <!--&lt;!&ndash;array，array中collection默认是array->-->
+    <select id="selectByArray" resultType="com.sailfish.model.SysRole">
+        SELECT * FROM sys_role
+        <where>
+            id IN
+            <foreach collection="array" open="(" close=")" separator=","
+                     item="id" index="i">
+                #{id}
+            </foreach>
+        </where>
+    </select>
+
+
+    <!--还没解决这种问题-->
+    <select id="selectByMap" resultType="com.sailfish.model.SysRole">
+        SELECT * FROM sys_role
+        <where>
+            id IN
+            <foreach collection="map" open="(" close=")" separator=","
+                     item="val" index="i">
+                <foreach collection="list" open="(" close=")" separator=","
+                         item="id" index="i">
+                      #{id}
+                </foreach>
+            </foreach>
+        </where>
+    </select>
+
+    <select id="selectByMap2" resultType="com.sailfish.model.SysRole">
+        SELECT * FROM sys_role
+        <where>
+            id IN
+            <foreach collection="map" open="(" close=")" separator=","
+                     item="val" index="i">
+                #{val}
+            </foreach>
+        </where>
+    </select>
+
+    <!--批量插入，可以批量返回主键-->
+    <!--index可以不写-->
+    <insert id="batchInsertRole" keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO sys_role(
+          role_name, enabled, create_by, create_time
+        )
+        VALUES
+        <foreach collection="list" item="role" index="i" separator=",">
+            (#{role.roleName}, #{role.enabled}, #{role.createBy}, #{role.createTime, jdbcType = TIMESTAMP})
+        </foreach>
+
+    </insert>
+
+
+    <!--使用foreach+map动态更新-->
+    <!--如果在Mapper中指定了@Param("map")，则要在where字句后写成这样：id = #{map.id}-->
+    <update id="updateByMap">
+        UPDATE sys_role
+        SET
+        <foreach collection="_parameter" index="key" item="val" separator=",">
+            ${key} = #{val}
+        </foreach>
+        where
+        id = #{id}
+    </update>
 </mapper>
