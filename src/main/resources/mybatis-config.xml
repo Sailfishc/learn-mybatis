@@ -4,43 +4,24 @@
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
 
-    <!--<settings>-->
-        <!--&lt;!&ndash;输出LOG4J日志&ndash;&gt;-->
-        <!--<setting name="logImpl" value="LOG4J"/>-->
-    <!--</settings>-->
-
-    <!--<typeAliases>-->
-        <!--&lt;!&ndash;包名别名&ndash;&gt;-->
-        <!--<package name="com.sailfish.model" />-->
-    <!--</typeAliases>-->
-
-    <!--<environments default="development">-->
-        <!--<environment id="development">-->
-            <!--<transactionManager type="JDBC">-->
-                <!--<property name="" value=""></property>-->
-            <!--</transactionManager>-->
-            <!--<dataSource type="UNPOOLED">-->
-                <!--<property name="driver" value="com.mysql.jdbc.Driver"/>-->
-                <!--<property name="url" value="jdbc:mysql://localhost:3306/sailfish"/>-->
-                <!--<property name="username" value="root"/>-->
-                <!--<property name="password" value="root"/>-->
-            <!--</dataSource>-->
-        <!--</environment>-->
-    <!--</environments>-->
-
-    <!--<mappers>-->
-        <!--<mapper resource="com/sailfish/mapper/CountryMapper.xml"/>-->
-    <!--</mappers>-->
-
-
-
     <settings>
         <setting name="logImpl" value="LOG4J"/>
+        <!--开启驼峰式命名，开启后，在SQL中可以这样写：
+            1、返回resultTye
+            2、SQL返回字段user_name，JavaBean为userName不会报错
+            3、原因是最终都会转为USERNAME和USERNAME-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
     </settings>
 
     <typeAliases>
         <package name="com.sailfish.model"/>
     </typeAliases>
+
+    <typeHandlers>
+        <typeHandler
+                javaType="com.sailfish.type.Enabled"
+                handler="com.sailfish.type.EnabledTypeHandler"/>
+    </typeHandlers>
 
     <environments default="development">
         <environment id="development">
@@ -58,7 +39,14 @@
 
 
     <mappers>
-        <mapper resource="com/sailfish/mapper/CountryMapper.xml"/>
+        <!--<mapper resource="com/sailfish/mapper/CountryMapper.xml"/>
+        <mapper resource="com/sailfish/mapper/UserMapper.xml"/>
+        <mapper resource="com/sailfish/mapper/RoleMapper.xml"/>
+        <mapper resource="com/sailfish/mapper/PrivilegeMapper.xml"/>
+        <mapper resource="com/sailfish/mapper/UserRoleMapper.xml"/>
+        <mapper resource="com/sailfish/mapper/RolePrivilegeMapper.xml"/>-->
+        <!--这种适用于有Mapper接口-->
+        <package name="com.sailfish.mapper"/>
     </mappers>
 
 

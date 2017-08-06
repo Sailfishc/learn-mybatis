@@ -24,9 +24,9 @@ public class CountryMapperTest {
     public static void init() {
         try {
             Reader read = Resources.getResourceAsReader("mybatis-config.xml");
-            SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
-            sqlSessionFactory = builder.build(read);
-//            sqlSessionFactory = new SqlSessionFactoryBuilder().build(read);
+//            SqlSessionFactoryBuilder builder = new SqlSessionFactoryBuilder();
+//            sqlSessionFactory = builder.build(read);
+            sqlSessionFactory = new SqlSessionFactoryBuilder().build(read);
             read.close();
         } catch (Exception e) {
 
@@ -37,7 +37,9 @@ public class CountryMapperTest {
     public void testSelectAll() {
         SqlSession sqlSession = sqlSessionFactory.openSession();
         try {
-            List<Country> countryList = sqlSession.selectList("selectAll");
+//            如果是没有Mapper接口的话使用这种模式，不用全限定名
+//            List<Country> countryList = sqlSession.selectList("selectAll");
+            List<Country> countryList = sqlSession.selectList("com.sailfish.mapper.CountryMapper.selectAll");
             printCountryList(countryList);
         } finally {
             sqlSession.close();

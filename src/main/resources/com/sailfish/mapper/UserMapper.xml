@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--mapper：根元素，namespace：命名空间-->
+<mapper namespace="com.sailfish.mapper.UserMapper">
+
+    <resultMap id="userMap" type="com.sailfish.model.SysUser">
+        <id property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userPassword" column="user_password"/>
+        <result property="userEmail" column="user_email"/>
+        <result property="userInfo" column="user_info"/>
+        <!--二进制类型-->
+        <result property="headImg" column="head_img" jdbcType="BLOB"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!--resultMap是处理数据库字段和JavaBean字段不一致的情况-->
+    <select id="selectById" resultMap="userMap">
+       SELECT * FROM SYS_USER WHERE id = #{id};
+    </select>
+
+    <!--这里将返回字段重命名为和JavaBean一致的，就可以返回resultType-->
+    <select id="selectAll" resultType="com.sailfish.model.SysUser">
+        SELECT
+            id,
+            user_name AS userNmae,
+            user_password AS usePassword,
+            user_info AS userInfo,
+            user_email AS userEmail,
+            head_img AS headImg,
+            create_time AS createTime
+        FROM
+            SYS_USER ;
+    </select>
+
+
+    <!--这里的返回值enabled是一个枚举类型，需要新建一个EnabledTypeHandler，然后再mybatis-config中声明，不然会出现异常-->
+    <select id="selectRolesByUserId" resultType="com.sailfish.model.SysRole">
+        SELECT
+          t3.id,
+          t3.role_name roleName,
+          t3.enabled,
+          t3.create_by createBy,
+          t3.create_time createTime
+         FROM sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id INNER JOIN sys_role t3 ON t2.role_id = t3.id WHERE t1.id = #{id}
+    </select>
+
+
+    <select id="selectRolesByUserId2" resultType="com.sailfish.dto.SysRoleExtend">
+        SELECT
+        t3.id,
+        t3.role_name roleName,
+        t3.enabled,
+        t3.create_by createBy,
+        t3.create_time createTime,
+        t1.user_name userName
+        FROM sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id INNER JOIN sys_role t3 ON t2.role_id = t3.id WHERE t1.id = #{id}
+    </select>
+
+    <!--在Role中添加了User-->
+    <select id="selectRolesByUserId3" resultType="com.sailfish.model.SysRole">
+        SELECT
+        t3.id,
+        t3.role_name roleName,
+        t3.enabled,
+        t3.create_by createBy,
+        t3.create_time createTime,
+        t1.user_name AS 'user.userName'
+        FROM sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id INNER JOIN sys_role t3 ON t2.role_id = t3.id WHERE t1.id = #{id}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO SYS_USER (
+          id, user_name, user_password, user_email, user_info, head_img, create_time
+        )
+        VALUES (
+          #{id},
+          #{userName},
+          #{userPassword},
+          #{userEmail},
+          #{userInfo},
+          #{headImg, jdbcType = BLOB},
+          #{createTime, jdbcType = TIMESTAMP}
+        )
+    </insert>
+
+
+    <insert id="insert2" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO SYS_USER (
+        user_name, user_password, user_email, user_info, head_img, create_time
+        )
+        VALUES (
+        #{userName},
+        #{userPassword},
+        #{userEmail},
+        #{userInfo},
+        #{headImg, jdbcType = BLOB},
+        #{createTime, jdbcType = TIMESTAMP}
+        )
+    </insert>
+
+
+    <insert id="insert3">
+        INSERT INTO SYS_USER (
+        user_name, user_password, user_email, user_info, head_img, create_time
+        )
+        VALUES (
+        #{userName},
+        #{userPassword},
+        #{userEmail},
+        #{userInfo},
+        #{headImg, jdbcType = BLOB},
+        #{createTime, jdbcType = TIMESTAMP}
+        )
+--         注意：mysql和oracle的order顺序不一样，mysql在后，oracle在前
+        <selectKey keyColumn="id" resultType="long" keyProperty="id" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    </insert>
+
+
+    <!--多查询条件-->
+    <select id="selectRolesByUserIdAndEnabled" resultType="com.sailfish.model.SysRole">
+        SELECT
+        t3.id,
+        t3.role_name roleName,
+        t3.enabled,
+        t3.create_by createBy,
+        t3.create_time createTime
+        FROM sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        WHERE
+          t1.id = #{id}
+          AND t3.enabled = #{enabled}
+    </select>
+
+    <!--解决办法一：不建议-->
+    <select id="selectRolesByUserIdAndEnabled2" resultType="com.sailfish.model.SysRole">
+        SELECT
+        t3.id,
+        t3.role_name roleName,
+        t3.enabled,
+        t3.create_by createBy,
+        t3.create_time createTime
+        FROM sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        WHERE
+        t1.id = #{arg0}
+        AND t3.id = #{arg1}
+
+    </select>
+     <!--或者 t1.id = #{param1}-->
+    <!--AND t3.id = #{param2}-->
+
+
+    <select id="selectRolesByUserIdAndEnabled3" resultType="com.sailfish.model.SysRole">
+        SELECT
+        t3.id,
+        t3.role_name roleName,
+        t3.enabled,
+        t3.create_by createBy,
+        t3.create_time createTime
+        FROM sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        WHERE
+        t1.id = #{id}
+        AND t3.enabled = #{enabled}
+
+    </select>
+
+
+    <select id="selectRolesWithBean" resultType="com.sailfish.model.SysRole">
+        SELECT
+        t3.id,
+        t3.role_name roleName,
+        t3.enabled,
+        t3.create_by createBy,
+        t3.create_time createTime
+        FROM sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        WHERE
+        t1.id = #{user.id}
+        AND t3.enabled = #{role.enabled}
+
+    </select>
+</mapper>
