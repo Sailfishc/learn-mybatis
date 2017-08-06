@@ -11,6 +11,9 @@
             2、SQL返回字段user_name，JavaBean为userName不会报错
             3、原因是最终都会转为USERNAME和USERNAME-->
         <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--默认是true，表示对任意延迟属性调用会使带有延迟加载属性的对象完整加载-->
+        <setting name="aggressiveLazyLoading" value="false"/>
+        <!--MyBatis提供了lazyLoadTriggerMethods来帮助开启全局禁止延迟加载的参数，默认是开启的，在调用toString等方法时会生效-->
     </settings>
 
     <typeAliases>

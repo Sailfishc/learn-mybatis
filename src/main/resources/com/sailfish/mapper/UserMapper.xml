@@ -16,6 +16,119 @@
         <result property="createTime" column="create_time"/>
     </resultMap>
 
+    <resultMap id="noIdUserMap" type="com.sailfish.model.SysUser">
+        <id property="userPassword" column="user_password"/>
+        <result property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userEmail" column="user_email"/>
+        <result property="userInfo" column="user_info"/>
+        <!--二进制类型-->
+        <result property="headImg" column="head_img" jdbcType="BLOB"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <!--配置方式一：关联的嵌套结果映射-->
+    <resultMap id="userRoleMap" type="com.sailfish.model.SysUser">
+        <id property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userPassword" column="user_password"/>
+        <result property="userEmail" column="user_email"/>
+        <result property="userInfo" column="user_info"/>
+        <!--二进制类型-->
+        <result property="headImg" column="head_img" jdbcType="BLOB"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+
+        <!--Role-->
+        <result property="role.id" column="role_id"/>
+        <result property="role.roleName" column="role_name"/>
+        <result property="role.enabled" column="enabled"/>
+        <result property="role.createBy" column="create_by"/>
+        <result property="role.createTime" column="role_create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--这里省略了role.前缀，因为property中设置了统一的-->
+    <!--配置方式二-->
+    <resultMap id="userRoleMap2" type="com.sailfish.model.SysUser"
+        extends="userMap">
+        <association property="role" columnPrefix="role_"
+                javaType="com.sailfish.model.SysRole">
+            <id property="id" column="id"/>
+            <result property="roleName" column="role_name"/>
+            <result property="enabled" column="enabled"/>
+            <result property="createBy" column="create_by"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        </association>
+    </resultMap>
+
+    <!--配置方式3-->
+    <resultMap id="userRoleMap3" type="com.sailfish.model.SysUser"
+               extends="userMap">
+        <association property="role" columnPrefix="role_"
+                     javaType="com.sailfish.model.SysRole" resultMap="roleMap">
+        </association>
+    </resultMap>
+    
+    <resultMap id="roleMap" type="com.sailfish.model.SysRole">
+        <id property="id" column="id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--配置方式四-->
+    <resultMap id="userRoleMap4" type="com.sailfish.model.SysUser"
+               extends="userMap">
+        <association property="role" columnPrefix="role_"
+                     javaType="com.sailfish.model.SysRole" 
+                     resultMap="com.sailfish.mapper.RoleMapper.roleMap">
+        </association>
+    </resultMap>
+
+
+    <!--关联的嵌套查询,开启了懒加载-->
+    <resultMap id="userRoleMapSelect" type="com.sailfish.model.SysUser"
+               extends="userMap">
+        <association property="role" column="{id=role_id}"
+                     select="com.sailfish.mapper.RoleMapper.selectRoleById" fetchType="lazy">
+
+        </association>
+    </resultMap>
+
+
+
+    <!--一对多映射-->
+    <resultMap id="userRoleListMap" type="com.sailfish.model.SysUser"
+               extends="userMap">
+        <collection property="roleList" columnPrefix="role_"
+                     resultMap="com.sailfish.mapper.RoleMapper.roleMap">
+        </collection>
+    </resultMap>
+
+    <!--引入没有配置id的roleMap-->
+    <resultMap id="userNoIdRoleListMap" type="com.sailfish.model.SysUser"
+               extends="noIdUserMap">
+        <collection property="roleList" columnPrefix="role_"
+                    resultMap="com.sailfish.mapper.RoleMapper.roleNoIdMap">
+        </collection>
+    </resultMap>
+
+    <resultMap id="userRolesPrivilegesMap" type="com.sailfish.model.SysUser"
+               extends="userMap">
+        <collection property="roleList" columnPrefix="role_"
+                    resultMap="com.sailfish.mapper.RoleMapper.rolePrivilegeMap">
+        </collection>
+    </resultMap>
+
+    <!--嵌套查询:将column中的userId写为了user_id-->
+    <resultMap id="userRolesPrivilegesInnerMap" type="com.sailfish.model.SysUser"
+               extends="userMap">
+        <collection property="roleList" column="{userId=id}" select="com.sailfish.mapper.RoleMapper.selectRolesByUserId"
+                fetchType="lazy">
+        </collection>
+    </resultMap>
+
+
     <!--resultMap是处理数据库字段和JavaBean字段不一致的情况-->
     <select id="selectById" resultMap="userMap">
        SELECT * FROM SYS_USER WHERE id = #{id};
@@ -114,7 +227,7 @@
         #{headImg, jdbcType = BLOB},
         #{createTime, jdbcType = TIMESTAMP}
         )
---         注意：mysql和oracle的order顺序不一样，mysql在后，oracle在前
+        -- 注意：mysql和oracle的order顺序不一样，mysql在后，oracle在前
         <selectKey keyColumn="id" resultType="long" keyProperty="id" order="AFTER">
             SELECT LAST_INSERT_ID()
         </selectKey>
@@ -149,7 +262,7 @@
         AND t3.id = #{arg1}
 
     </select>
-     <!--或者 t1.id = #{param1}-->
+    <!--或者 t1.id = #{param1}-->
     <!--AND t3.id = #{param2}-->
 
 
@@ -181,4 +294,179 @@
         AND t3.enabled = #{role.enabled}
 
     </select>
+
+
+    <!--高级查询-->
+    <!--t3.role_name "role.roleName"如果不这么写，不会报错，但是会取不到值：看下面的role.role_name-->
+    <!--SysUser{id=1, userName='admin', userPassword='123456', userEmail='admin@mybatis.tk', userInfo='管理员用户', headImg=[18, 49, 35, 18, 48], createTime=Tue Jun 07 14:11:12 CST 2016, role=SysRole{id=1, roleName='null', enabled=enabled, createBy='1', createTime=Sat Apr 02 06:02:14 CST 2016, user=null, privilegeList=null}, roleList=null}-->
+    <!--SysUser{id=1, userName='admin', userPassword='123456', userEmail='admin@mybatis.tk', userInfo='管理员用户', headImg=[18, 49, 35, 18, 48], createTime=Tue Jun 07 14:11:12 CST 2016, role=SysRole{id=1, roleName='管理员', enabled=enabled, createBy='1', createTime=Sat Apr 02 06:02:14 CST 2016, user=null, privilegeList=null}, roleList=null}-->
+    <select id="selectUserAndRoleById" resultType="com.sailfish.model.SysUser">
+        SELECT
+          t1.id,
+          t1.user_name userName,
+          t1.user_password userPassword,
+          t1.user_email userEmail,
+          t1.user_info userInfo,
+          t1.head_img headImg,
+          t1.create_time createTime,
+          t3.id "role.id",
+          t3.role_name "role.roleName",
+          t3.enabled "role.enabled",
+          t3.create_by "role.createBy",
+          t3.create_time "role.createTime"
+        FROM
+          sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id
+          INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        WHERE
+          t1.id = #{id}
+    </select>
+
+
+    <!--注意返回值，resultMap返回值字段和resultmap中的column一致-->
+    <select id="selectUserAndRoleById2" resultMap="userRoleMap">
+        SELECT
+        t1.id,
+        t1.user_name,
+        t1.user_password,
+        t1.user_email,
+        t1.user_info,
+        t1.head_img,
+        t1.create_time,
+        t3.id role_id,
+        t3.role_name ,
+        t3.enabled ,
+        t3.create_by ,
+        t3.create_time role_create_time
+        FROM
+        sys_user t1 INNER JOIN sys_user_role t2 ON t1.id = t2.user_id
+        INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        WHERE
+        t1.id = #{id}
+    </select>
+
+
+    <select id="selectUserAndRoleById3" resultMap="userRoleMap2">
+        SELECT
+        t1.id,
+        t1.user_name,
+        t1.user_password,
+        t1.user_email,
+        t1.user_info,
+        t1.head_img,
+        t1.create_time,
+        t3.id role_id,
+        t3.role_name role_role_name,
+        t3.enabled role_enabled,
+        t3.create_by role_create_by,
+        t3.create_time role_create_time
+        FROM
+        sys_user t1
+        INNER JOIN sys_user_role t2 ON t1.id = t2.user_id
+        INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        WHERE
+        t1.id = #{id}
+    </select>
+
+
+    <!--关联的嵌套查询-->
+    <select id="selectUserAndRoleByIdSelect" resultMap="userRoleMapSelect">
+        SELECT
+        t1.id,
+        t1.user_name,
+        t1.user_password,
+        t1.user_email,
+        t1.user_info,
+        t1.head_img,
+        t1.create_time,
+        t2.role_id
+        FROM
+        sys_user t1
+        INNER JOIN sys_user_role t2 ON t1.id = t2.user_id
+        WHERE
+        t1.id = #{id}
+    </select>
+
+
+    <select id="selectAllUserRoles" resultMap="userRoleListMap">
+        SELECT
+        t1.id,
+        t1.user_name,
+        t1.user_password,
+        t1.user_email,
+        t1.user_info,
+        t1.head_img,
+        t1.create_time,
+        t3.id role_id,
+        t3.role_name role_role_name,
+        t3.enabled role_enabled,
+        t3.create_by role_create_by,
+        t3.create_time role_create_time
+        FROM
+        sys_user t1
+        INNER JOIN sys_user_role t2 ON t1.id = t2.user_id
+        INNER JOIN sys_role t3 ON t2.role_id = t3.id
+    </select>
+
+
+    <!--没有配置RoleID的-->
+    <select id="selectAllUserNoIdRoles" resultMap="userNoIdRoleListMap">
+        SELECT
+        t1.id,
+        t1.user_name,
+        t1.user_password,
+        t1.user_email,
+        t1.user_info,
+        t1.head_img,
+        t1.create_time,
+        t3.role_name role_role_name,
+        t3.enabled role_enabled,
+        t3.create_by role_create_by,
+        t3.create_time role_create_time
+        FROM
+        sys_user t1
+        INNER JOIN sys_user_role t2 ON t1.id = t2.user_id
+        INNER JOIN sys_role t3 ON t2.role_id = t3.id
+    </select>
+
+
+    <select id="selectAllUserRolesPrivileges" resultMap="userRolesPrivilegesMap">
+        SELECT
+        t1.id,
+        t1.user_name,
+        t1.user_password,
+        t1.user_email,
+        t1.user_info,
+        t1.head_img,
+        t1.create_time,
+        t3.role_name role_role_name,
+        t3.enabled role_enabled,
+        t3.create_by role_create_by,
+        t3.create_time role_create_time,
+        t5.id role_privilege_id,
+        t5.privilege_name role_privilege_privilege_name,
+        t5.privilege_url role_privilege_privilege_url
+        FROM
+        sys_user t1
+        INNER JOIN sys_user_role t2 ON t1.id = t2.user_id
+        INNER JOIN sys_role t3 ON t2.role_id = t3.id
+        INNER JOIN sys_role_privilege t4 ON t3.id = t4.role_id
+        INNER JOIN sys_privilege t5 ON t4.privilege_id = t5.id
+    </select>
+
+
+    <select id="selectAllUserRolesPrivilegesWithInner" resultMap="userRolesPrivilegesInnerMap">
+        SELECT
+        id,
+        user_name,
+        user_password,
+        user_email,
+        user_info,
+        head_img,
+        create_time
+        FROM
+        sys_user
+        WHERE
+        id = #{id}
+    </select>
+
 </mapper>

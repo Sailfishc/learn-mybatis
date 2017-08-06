@@ -73,4 +73,18 @@ public interface UserMapper {
      */
     List<SysRole> selectRolesWithBean(@Param("user") SysUser user, @Param("role") SysRole role);
 
+
+    //查询一
+    List<SysUser> selectUserAndRoleById(Integer id);
+    List<SysUser> selectUserAndRoleById2(Integer id);
+    List<SysUser> selectUserAndRoleById3(Integer id);
+
+
+    List<SysUser> selectUserAndRoleByIdSelect(Integer id);
+
+    List<SysUser> selectAllUserRoles();
+    List<SysUser> selectAllUserNoIdRoles();
+    List<SysUser> selectAllUserRolesPrivileges();
+    List<SysUser> selectAllUserRolesPrivilegesWithInner(Integer id);
+
 }

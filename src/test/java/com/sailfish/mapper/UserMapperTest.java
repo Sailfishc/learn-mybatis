@@ -1,6 +1,7 @@
 package com.sailfish.mapper;
 
 import com.sailfish.dto.SysRoleExtend;
+import com.sailfish.model.SysPrivilege;
 import com.sailfish.model.SysRole;
 import com.sailfish.model.SysUser;
 import com.sailfish.type.Enabled;
@@ -216,4 +217,141 @@ public class UserMapperTest extends BaseMapperTest {
         }
     }
 
+
+    /**
+     * 这里需要注意几点：
+     *      目前来说一个User有多个Role：
+     *      例如： admin用户有两个角色：管理员和普通用户
+     *      test有一个角色：普通用户
+     *      但是为什么解析出来是2条数据，而不是3条或者1条？
+     *      依靠的是userMapper中配置的baseUserMap配置的<id property="id" column="id"/>，
+     *      如果将密码（数据库中有可能存多个相同值）就会出现错误的情况
+     *      下一个案例就是错误的.
+     *      处理逻辑：按照id，如果没有设置id，会对比字段，如果一直，会合并，否则不会，设置id后性能会好很多
+     *       @throws Exception
+     */
+    @Test
+    public void selectAllUserRoles() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+        try {
+
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            List<SysUser> sysUsers = mapper.selectAllUserRoles();
+
+            for (SysUser sysUser : sysUsers) {
+                System.out.println("用户数："+sysUsers.size());
+                System.out.println("用户名："+sysUser.getUserName());
+                List<SysRole> roleList = sysUser.getRoleList();
+                for (SysRole role : roleList) {
+                    System.out.println("角色名："+role.getRoleName());
+                }
+            }
+
+        }finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+    /**
+     * 用户数：1
+      用户名：admin
+     角色名：管理员
+     角色名：普通用户
+     角色名：普通用户
+     * @throws Exception
+     */
+    @Test
+    public void selectAllUserNoIdRoles() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+        try {
+
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            List<SysUser> sysUsers = mapper.selectAllUserNoIdRoles();
+
+            for (SysUser sysUser : sysUsers) {
+                System.out.println("用户数："+sysUsers.size());
+                System.out.println("用户名："+sysUser.getUserName());
+                List<SysRole> roleList = sysUser.getRoleList();
+                for (SysRole role : roleList) {
+                    System.out.println("角色名："+role.getRoleName());
+                }
+            }
+
+        }finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+
+    @Test
+    public void selectAllUserRolesPrivileges() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+        try {
+
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            List<SysUser> sysUsers = mapper.selectAllUserRolesPrivileges();
+
+            for (SysUser sysUser : sysUsers) {
+                System.out.println("用户数："+sysUsers.size());
+                System.out.println("用户名："+sysUser.getUserName());
+                List<SysRole> roleList = sysUser.getRoleList();
+                for (SysRole role : roleList) {
+                    System.out.println("    角色名："+role.getRoleName());
+                    List<SysPrivilege> privilegeList = role.getPrivilegeList();
+                    for (SysPrivilege sysPrivilege : privilegeList) {
+                        System.out.println("        资源名称："+sysPrivilege.getPrivilegeName());
+                    }
+                }
+            }
+
+        }finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Test
+    public void selectAllUserRolesPrivilegesWithInner() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+        try {
+
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            List<SysUser> sysUsers = mapper.selectAllUserRolesPrivilegesWithInner(1);
+
+            for (SysUser sysUser : sysUsers) {
+                sysUser.toString();
+                System.out.println("用户数："+sysUsers.size());
+                System.out.println("用户名："+sysUser.getUserName());
+                List<SysRole> roleList = sysUser.getRoleList();
+                for (SysRole role : roleList) {
+                    role.toString();
+                    System.out.println("    角色名："+role.getRoleName());
+                    List<SysPrivilege> privilegeList = role.getPrivilegeList();
+                    for (SysPrivilege sysPrivilege : privilegeList) {
+                        sysPrivilege.toString();
+                        System.out.println("        资源名称："+sysPrivilege.getPrivilegeName());
+                    }
+                }
+            }
+
+        }finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
 }
+/*
+用户数：1
+        用户名：admin
+            角色名：管理员
+            资源名称：用户管理
+            资源名称：系统日志
+            资源名称：角色管理
+        角色名：普通用户
+            资源名称：人员维护
+             资源名称：单位维护*/

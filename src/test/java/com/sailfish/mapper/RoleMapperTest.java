@@ -1,6 +1,7 @@
 package com.sailfish.mapper;
 
 import com.sailfish.model.SysRole;
+import com.sailfish.model.SysUser;
 import com.sailfish.type.Enabled;
 
 import org.apache.ibatis.session.SqlSession;
@@ -316,6 +317,121 @@ public class RoleMapperTest extends BaseMapperTest {
 
 
             int result = mapper.updateByMap(map);
+
+        } finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+
+
+
+    @Test
+    public void selectUserAndRoleById() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+
+        try {
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+
+            List<SysUser> sysUsers = mapper.selectUserAndRoleById(1);
+            for (SysUser sysUser : sysUsers) {
+                System.out.println(sysUser.toString());
+            }
+
+        } finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+
+    @Test
+    public void selectUserAndRoleById2() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+
+        try {
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+
+            List<SysUser> sysUsers = mapper.selectUserAndRoleById2(1);
+            for (SysUser sysUser : sysUsers) {
+                System.out.println(sysUser.toString());
+            }
+
+        } finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+
+    @Test
+    public void selectUserAndRoleById3() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+
+        try {
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+
+            List<SysUser> sysUsers = mapper.selectUserAndRoleById3(1);
+            for (SysUser sysUser : sysUsers) {
+                System.out.println(sysUser.toString());
+            }
+
+        } finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+    @Test
+    public void selectUserAndRoleByIdSelect() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+
+        try {
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+
+
+            List<SysUser> sysUsers = mapper.selectUserAndRoleByIdSelect(1001);
+            for (SysUser sysUser : sysUsers) {
+//                这里如果调用了toString方法懒加载就不会生效
+//                System.out.println(sysUser.toString());
+            }
+
+        } finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+    @Test
+    public void selectRoleById() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+
+        try {
+            RoleMapper mapper = sqlSession.getMapper(RoleMapper.class);
+
+
+            SysRole role = mapper.selectRoleById(1);
+
+        } finally {
+            sqlSession.rollback();
+            sqlSession.close();
+        }
+    }
+
+    //根据用户id查询角色列表
+    @Test
+    public void selectRolesByUserId() throws Exception {
+        SqlSession sqlSession = getSqlSession();
+
+        try {
+            RoleMapper mapper = sqlSession.getMapper(RoleMapper.class);
+
+
+            List<SysRole> role = mapper.selectRolesByUserId(1);
 
         } finally {
             sqlSession.rollback();

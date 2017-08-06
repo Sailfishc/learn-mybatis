@@ -67,4 +67,8 @@ public interface RoleMapper {
      * @return
      */
     int updateByMap( Map<String, Object> map);
+
+    SysRole selectRoleById(Integer id);
+
+    List<SysRole> selectRolesByUserId(@Param("userId") Integer userId);
 }

@@ -14,6 +14,32 @@
     </resultMap>
 
 
+    <resultMap id="roleNoIdMap" type="com.sailfish.model.SysRole">
+        <id property="id" column="id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="enabled" column="enabled"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <resultMap id="rolePrivilegeMap" type="com.sailfish.model.SysRole"
+            extends="roleMap">
+        <collection property="privilegeList" columnPrefix="privilege_"
+                    resultMap="com.sailfish.mapper.PrivilegeMapper.privilegeMap">
+
+        </collection>
+    </resultMap>
+
+
+    <!--嵌套查询-->
+    <resultMap id="rolesPrivilegesInnerMap" type="com.sailfish.model.SysRole"
+               extends="roleMap">
+        <collection property="privilegeList" column="{roleId=id}" select="com.sailfish.mapper.PrivilegeMapper.selectPrivilegeListByRoleId"
+                    fetchType="lazy">
+        </collection>
+    </resultMap>
+
+
     <!--动态SQL-->
     <!--这样是不满足某种业务场景的，例如只按照userName模糊查询或者是只单独按照userEmail精确查询-->
     <select id="selectByCondition" resultType="com.sailfish.model.SysRole">
@@ -245,4 +271,22 @@
         where
         id = #{id}
     </update>
+
+
+    <select id="selectRoleById" resultMap="roleMap">
+        SELECT
+        *
+        FROM
+        sys_role
+        WHERE
+         id = #{id}
+    </select>
+
+    <select id="selectRolesByUserId" resultMap="rolesPrivilegesInnerMap">
+        SELECT t1.*
+        FROM sys_role t1
+        INNER JOIN sys_user_role t2 ON  t1.id = t2.role_id
+        WHERE
+        t2.user_id = #{userId}
+    </select>
 </mapper>
